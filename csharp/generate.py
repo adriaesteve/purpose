@@ -13,7 +13,7 @@ namespace = "EthContracts"
 BIN_ROOT = "bin"
 CONTRACTS_ROOT = pjoin("..", "build", "contracts")
 GEN_OUTPUT = pjoin(".", "Generated")
-gen_dll = pjoin(".", "Nethereum.Generator", "Nethereum.Generator.Console.dll")
+gen_dll = pjoin(".", "Nethereum.Generator.Console", "Nethereum.Generator.Console.dll")
 
 for contract in contracts:
     # read contract json
@@ -37,20 +37,6 @@ for contract in contracts:
     subprocess.call(
         f'dotnet {gen_dll} gen-fromabi -abi "{abi_filename}" -bin "{bin_filename}" -cn {contract} -ns {namespace} -o {GEN_OUTPUT}'
     )
-
-
-# DUBIService.cs specific patches
-def patch_DUBIService(code):
-    code = "using Nethereum.Contracts.ContractHandlers;\n" + code
-    return code
-
-
-dubi_service = pjoin(GEN_OUTPUT, "DUBI", "Service", "DUBIService.cs")
-with open(dubi_service, "r") as original:
-    code = original.read()
-with open(dubi_service, "w") as modified:
-    modified.write(patch_DUBIService(code))
-
 
 # copy to output folder, if provided
 if len(sys.argv) == 2:
