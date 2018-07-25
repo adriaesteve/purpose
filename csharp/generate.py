@@ -6,16 +6,28 @@ from os.path import join as pjoin
 from distutils.dir_util import copy_tree, remove_tree
 
 
-contracts = ["DUBI"]
-namespace = "EthContracts"
+CONTRACTS = ["DUBI"]
+NAMESPACE = "EthContracts"
+ABI_TEMPLATE = """
+namespace EthContracts.{}
+{{
+    public class {}ABI
+    {{
+        public static string ABI = @"{}";
+    }}
+}}
+"""
 
 # folder config
 BIN_ROOT = "bin"
 CONTRACTS_ROOT = pjoin("..", "build", "contracts")
 GEN_OUTPUT = pjoin(".", "Generated")
-gen_dll = pjoin(".", "Nethereum.Generator.Console", "Nethereum.Generator.Console.dll")
+GEN_DLL = pjoin(".", "Nethereum.Generator.Console", "Nethereum.Generator.Console.dll")
 
-for contract in contracts:
+# clean previous output
+remove_tree(GEN_OUTPUT)
+
+for contract in CONTRACTS:
     # read contract json
     with open(pjoin(CONTRACTS_ROOT, f"{contract}.json")) as contract_file:
         contract_json = json.load(contract_file)
@@ -35,8 +47,13 @@ for contract in contracts:
     # generate .cs files
     os.makedirs(GEN_OUTPUT, exist_ok=True)
     subprocess.call(
-        f'dotnet {gen_dll} gen-fromabi -abi "{abi_filename}" -bin "{bin_filename}" -cn {contract} -ns {namespace} -o {GEN_OUTPUT}'
+        f'dotnet {GEN_DLL} gen-fromabi -abi "{abi_filename}" -bin "{bin_filename}" -cn {contract} -ns {NAMESPACE} -o {GEN_OUTPUT}'
     )
+
+    # generate abi file
+    with open(pjoin(GEN_OUTPUT, contract, f"{contract}ABI.cs"), "w") as abi_file:
+        abi_file.write(ABI_TEMPLATE.format(contract, contract, abi))
+
 
 # copy to output folder, if provided
 if len(sys.argv) == 2:
@@ -47,5 +64,5 @@ if len(sys.argv) == 2:
         print(f"output folder '{output_folder}' doesnt exist, not copying")
 else:
     print(
-        '(optional) provide path to copy output to. example: \'python generate.py "D:/UnityProject/Assets/Plugins"'
+        r'(optional) provide path to copy output to. example: \'python generate.py "D:\UnityProject\Assets\#\Sources\GeneratedContracts"'
     )
