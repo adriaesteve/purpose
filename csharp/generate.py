@@ -13,7 +13,7 @@ namespace EthContracts.{}
 {{
     public class {}ABI
     {{
-        public static string ABI = @"{}";
+        public const string ABI = @"{}";
     }}
 }}
 """
